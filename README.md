@@ -21,78 +21,283 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Descripción
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Repositorio base de [Nest](https://github.com/nestjs/nest) framework TypeScript con integración de base de datos PostgreSQL.
 
-## Project setup
+## Requisitos Previos
+
+Antes de instalar la aplicación, asegúrate de tener lo siguiente instalado en tu sistema:
+
+- **Node.js** (versión 16 o superior)
+- **npm** o **yarn**
+- **PostgreSQL** (versión 12 o superior)
+
+## Instalación Paso a Paso
+
+### 1. Instalar Base de Datos PostgreSQL
+
+#### En Windows:
+1. Descarga PostgreSQL desde [https://www.postgresql.org/download/windows/](https://www.postgresql.org/download/windows/)
+2. Ejecuta el instalador y sigue el asistente de configuración
+3. Establece una contraseña para el usuario `postgres` (usa `imperio` como se especifica en el .env)
+4. Anota el puerto (por defecto es 5432)
+
+#### En macOS:
+```bash
+# Usando Homebrew
+brew install postgresql
+brew services start postgresql
+
+# Crear usuario postgres si es necesario
+createuser -s postgres
+```
+
+#### En Linux (Ubuntu/Debian):
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Establecer contraseña para el usuario postgres
+sudo -u postgres psql
+ALTER USER postgres PASSWORD 'imperio';
+\q
+```
+
+### 2. Crear Base de Datos
+
+Conéctate a PostgreSQL y crea la base de datos:
+
+```bash
+# Conectar a PostgreSQL
+psql -U postgres -h localhost
+
+# Crear la base de datos
+CREATE DATABASE tienda;
+
+# Salir de PostgreSQL
+\q
+```
+
+### 3. Clonar y Configurar la Aplicación
+
+```bash
+# Clonar el repositorio (reemplaza con la URL real de tu repositorio)
+git clone <url-de-tu-repositorio>
+cd <nombre-de-tu-proyecto>
+
+# Instalar dependencias
+npm install
+```
+
+### 4. Configuración de Variables de Entorno
+
+Crea un archivo `.env` en el directorio raíz de tu proyecto con el siguiente contenido:
+
+```env
+# Configuración de Base de Datos
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=imperio
+DB_NAME=tienda
+
+# Configuración JWT
+JWT_SECRET=secrettienda2025
+JWT_EXPIRES_IN=24h
+TOKEN_SECRET=token2025
+JWT_REFRESH_SECRET=refresh2025
+
+# Configuración de Aplicación
+PORT=3000
+NODE_ENV=development
+```
+
+**Importante:** Nunca subas el archivo `.env` a tu repositorio. Asegúrate de que esté incluido en tu archivo `.gitignore`.
+
+### 5. Configuración de Base de Datos (si usas migraciones)
+
+Si tu aplicación usa migraciones de TypeORM, ejecuta:
+
+```bash
+# Generar migración (si es necesario)
+npm run migration:generate
+
+# Ejecutar migraciones
+npm run migration:run
+```
+
+### 6. Verificar Conexión a Base de Datos
+
+Prueba que tu aplicación pueda conectarse a la base de datos:
+
+```bash
+# Iniciar la aplicación en modo desarrollo
+npm run start:dev
+```
+
+Si todo está configurado correctamente, deberías ver mensajes de conexión exitosa en la consola.
+
+## Configuración del Proyecto
 
 ```bash
 $ npm install
 ```
 
-## Compile and run the project
+## Compilar y ejecutar el proyecto
 
 ```bash
-# development
+# desarrollo
 $ npm run start
 
-# watch mode
+# modo watch
 $ npm run start:dev
 
-# production mode
+# modo producción
 $ npm run start:prod
 ```
 
-## Run tests
+## Ejecutar pruebas
 
 ```bash
-# unit tests
+# pruebas unitarias
 $ npm run test
 
-# e2e tests
+# pruebas e2e
 $ npm run test:e2e
 
-# test coverage
+# cobertura de pruebas
 $ npm run test:cov
 ```
 
-## Deployment
+## Solución de Problemas
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Problemas de Conexión a Base de Datos
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1. **Conexión rechazada**: Asegúrate de que PostgreSQL esté ejecutándose
+   ```bash
+   # Verificar si PostgreSQL está ejecutándose
+   sudo systemctl status postgresql  # Linux
+   brew services list | grep postgresql  # macOS
+   ```
+
+2. **Fallo de autenticación**: Verifica que la contraseña en tu archivo `.env` coincida con la contraseña del usuario PostgreSQL
+
+3. **Base de datos no existe**: Asegúrate de haber creado la base de datos `tienda` como se muestra en el paso 2
+
+4. **Puerto ya en uso**: Si el puerto 3000 está ocupado, cambia el PORT en tu archivo `.env`
+
+### Comandos Útiles
+
+```bash
+# Verificar versión de PostgreSQL
+psql --version
+
+# Conectar directamente a la base de datos
+psql -U postgres -h localhost -d tienda
+
+# Reiniciar servicio PostgreSQL
+sudo systemctl restart postgresql  # Linux
+brew services restart postgresql   # macOS
+```
+
+## Despliegue
+
+Cuando estés listo para desplegar tu aplicación NestJS a producción, hay algunos pasos clave que puedes seguir para asegurar que funcione de la manera más eficiente posible. Consulta la [documentación de despliegue](https://docs.nestjs.com/deployment) para más información.
+
+Si estás buscando una plataforma basada en la nube para desplegar tu aplicación NestJS, echa un vistazo a [Mau](https://mau.nestjs.com), nuestra plataforma oficial para desplegar aplicaciones NestJS en AWS. Mau hace que el despliegue sea directo y rápido, requiriendo solo unos pocos pasos simples:
 
 ```bash
 $ npm install -g @nestjs/mau
 $ mau deploy
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Con Mau, puedes desplegar tu aplicación en solo unos clics, permitiéndote enfocarte en construir características en lugar de administrar infraestructura.
 
-## Resources
+# Comandos de Docker
+bash# Construir y ejecutar con Docker Compose
+docker-compose up --build
 
-Check out a few resources that may come in handy when working with NestJS:
+# Ejecutar en segundo plano
+docker-compose up -d
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Ver logs
+docker-compose logs -f
 
-## Support
+# Detener los contenedores
+docker-compose down
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Detener y eliminar volúmenes (cuidado: elimina los datos de la DB)
+docker-compose down -v
+5. Variables de Entorno para Producción
+Para producción, es recomendable usar un archivo .env.production:
+env# Configuración de Base de Datos
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=imperio_produccion_segura
+DB_NAME=tienda
 
-## Stay in touch
+# Configuración JWT (usar secretos más seguros)
+JWT_SECRET=secreto_super_seguro_produccion_2025
+JWT_EXPIRES_IN=24h
+TOKEN_SECRET=token_produccion_2025
+JWT_REFRESH_SECRET=refresh_produccion_2025
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
+# Configuración de Aplicación
+PORT=3000
+NODE_ENV=production
+6. Comandos Útiles de Docker
+bash# Ver contenedores ejecutándose
+docker ps
+
+# Conectar a la base de datos PostgreSQL en Docker
+docker exec -it tienda_postgres psql -U postgres -d tienda
+
+# Ver logs de la aplicación
+docker logs tienda_app
+
+# Reiniciar solo la aplicación
+docker-compose restart app
+
+# Ejecutar migraciones en el contenedor
+docker-compose exec app npm run migration:run
+
+# Acceder al contenedor de la aplicación
+docker exec -it tienda_app sh
+7. Consideraciones de Producción
+
+Seguridad: Cambia todas las contraseñas y secretos por valores seguros
+Volúmenes: Los datos de PostgreSQL se mantienen en un volumen persistente
+Redes: La aplicación y la base de datos están en una red privada
+Monitoreo: Considera agregar herramientas como Grafana o Prometheus
+Backup: Implementa estrategias de respaldo para la base de datos
+
+## Recursos
+
+Consulta algunos recursos que pueden ser útiles cuando trabajes con NestJS:
+
+- Visita la [Documentación de NestJS](https://docs.nestjs.com) para aprender más sobre el framework.
+- Para preguntas y soporte, visita nuestro [canal de Discord](https://discord.gg/G7Qnnhy).
+- Para profundizar y obtener más experiencia práctica, echa un vistazo a nuestros [cursos](https://courses.nestjs.com/) oficiales en video.
+- Despliega tu aplicación a AWS con la ayuda de [NestJS Mau](https://mau.nestjs.com) en solo unos clics.
+- Visualiza el gráfico de tu aplicación e interactúa con la aplicación NestJS en tiempo real usando [NestJS Devtools](https://devtools.nestjs.com).
+- ¿Necesitas ayuda con tu proyecto (medio tiempo a tiempo completo)? Consulta nuestro [soporte empresarial](https://enterprise.nestjs.com) oficial.
+- Para mantenerte informado y recibir actualizaciones, síguenos en [X](https://x.com/nestframework) y [LinkedIn](https://linkedin.com/company/nestjs).
+- ¿Buscas trabajo o tienes una oferta laboral? Consulta nuestro [tablero de empleos](https://jobs.nestjs.com) oficial.
+
+## Soporte
+
+Nest es un proyecto de código abierto con licencia MIT. Puede crecer gracias a los patrocinadores y el apoyo de los increíbles respaldadores. Si te gustaría unirte a ellos, por favor [lee más aquí](https://docs.nestjs.com/support).
+
+## Mantente en Contacto
+
+- Autor - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Sitio Web - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
 
-## License
+## Licencia
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Nest tiene [licencia MIT](https://github.com/nestjs/nest/blob/master/LICENSE).

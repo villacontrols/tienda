@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: tienda_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tienda
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: imperio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tienda_network
+
+  # Aplicación NestJS
+  app:
+    build: .
+    container_name: tienda_app
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=imperio
+      - DB_NAME=tienda
+      - JWT_SECRET=secrettienda2025
+      - JWT_EXPIRES_IN=24h
+      - TOKEN_SECRET=token2025
+      - JWT_REFRESH_SECRET=refresh2025
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    networks:
+      - tienda_network
+
+volumes:
+  postgres_data:
+
+networks:
+  tienda_network:
+    driver: bridge
