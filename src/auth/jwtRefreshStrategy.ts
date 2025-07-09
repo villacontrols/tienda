@@ -1,21 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-console.log("secreto",process.env.TOKEN_SECRET)
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: process.env.TOKEN_SECRET!, 
+      secretOrKey: process.env.JWT_REFRESH_SECRET!,
+      passReqToCallback: false,
     });
   }
-  
-    async validate(payload: any) {
+
+  async validate(payload: any) {
     return { userId: payload.sub, email: payload.email, rol: payload.rol };
   }
 }

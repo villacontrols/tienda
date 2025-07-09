@@ -24,7 +24,7 @@ import { ItemOrdenModule } from './item-orden/item-orden.module';
       synchronize: true,
   }),
     UserModule, ProductoModule, OrdenesModule, AuthModule, ItemOrdenModule],
-  controllers: [AppController, ProductoController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

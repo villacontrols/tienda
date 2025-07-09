@@ -28,7 +28,9 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './userDto/userDto';
 import { User } from './UserEntity/user.entity';
-import { JwtAuthGuard } from 'src/auth/autGuard';
+import { JwtAuthGuard } from 'src/auth/guards/autGuard';
+import { RolesGuard } from 'src/util/permisosRoles/roles.guard';
+import { Roles } from 'src/util/permisosRoles/roles.decorator';
 
 // DTOs para endpoints específicos con decoraciones Swagger
 class ForgotPasswordDto {
@@ -100,7 +102,7 @@ export class UserController {
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Crear nuevo usuario',
-        description: 'Crea un nuevo usuario en el sistema con email único'
+        description: 'Crea un nuevo usuario en el sistema con email único su rol debe ser , admin o cliente'
     })
     @ApiCreatedResponse({
         description: 'Usuario creado exitosamente',
@@ -132,7 +134,8 @@ export class UserController {
 
 
     // Obtener todos los usuarios
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
     @Get()
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -151,7 +154,7 @@ export class UserController {
     }
 
     // Obtener usuario por ID
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Get(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -179,7 +182,7 @@ export class UserController {
 
     // Obtener usuario por email
     @Get('email/:email')
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Obtener usuario por email',
@@ -205,7 +208,7 @@ export class UserController {
     }
 
     // Actualizar usuario
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -249,7 +252,8 @@ export class UserController {
     }
 
     // Inactivar usuario (soft delete)
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles("admin")
     @Delete('deactivate/:id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -276,7 +280,7 @@ export class UserController {
     }
 
     // Eliminar usuario permanentemente
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -303,7 +307,7 @@ export class UserController {
     }
 
     // Recuperar contraseña - enviar token por email
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Post('forgot-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -326,7 +330,7 @@ export class UserController {
     }
 
     // Resetear contraseña con token
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Post('reset-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -349,7 +353,7 @@ export class UserController {
     }
 
     // Cambiar contraseña (usuario autenticado)
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Put('change-password/:id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
