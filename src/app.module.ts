@@ -16,15 +16,23 @@ dotenv.config();
   imports: [
      ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot({
-    type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseFloat(process.env.DB_PORT || '3306'),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-  }),
+  type: 'postgres',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '25060'),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  synchronize: process.env.NODE_ENV !== 'production', // Solo en desarrollo
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : false,
+  extra: process.env.NODE_ENV === 'production' ? {
+    ssl: {
+      rejectUnauthorized: false
+    }
+  } : {}
+}),
     UserModule, ProductoModule, OrdenesModule, AuthModule, ItemOrdenModule],
   controllers: [AppController],
   providers: [AppService],
