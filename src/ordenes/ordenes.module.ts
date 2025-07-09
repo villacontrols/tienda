@@ -6,8 +6,8 @@ import { Order } from './OrdenEntity/ordenes.entity';
 import { OrderItem } from '../item-orden/itemOrdenentity/itemOrden.entity';
 import { ProductoService } from 'src/producto/producto.service';
 import { UserService } from 'src/user/user.service';
-import { ProductoModule } from 'src/producto/producto.module';
-import { UserModule } from 'src/user/user.module';
+import { ProductoModule } from '../producto/producto.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem]), ProductoModule, UserModule],

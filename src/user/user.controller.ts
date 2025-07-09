@@ -28,9 +28,9 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './userDto/userDto';
 import { User } from './UserEntity/user.entity';
-import { JwtAuthGuard } from 'src/auth/guards/autGuard';
-import { RolesGuard } from 'src/util/permisosRoles/roles.guard';
-import { Roles } from 'src/util/permisosRoles/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/autGuard';
+import { RolesGuard } from '../util/permisosRoles/roles.guard';
+import { Roles } from '../util/permisosRoles/roles.decorator';
 
 // DTOs para endpoints específicos con decoraciones Swagger
 class ForgotPasswordDto {

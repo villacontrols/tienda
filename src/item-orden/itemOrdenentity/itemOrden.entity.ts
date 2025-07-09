@@ -1,5 +1,5 @@
-import { Order } from 'src/ordenes/OrdenEntity/ordenes.entity';
-import { Product } from 'src/producto/entity/producto.entity';
+import { Order } from '../../ordenes/OrdenEntity/ordenes.entity';
+import { Product } from '../../producto/entity/producto.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 

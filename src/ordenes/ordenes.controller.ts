@@ -33,9 +33,9 @@ import {
 import { OrdenesService } from './ordenes.service';
 import { CreateOrderDto, UpdateOrderDto } from './ordenDto/ordenDto';
 import { OrderStatus } from './OrdenEntity/ordenes.entity';
-import { JwtAuthGuard } from 'src/auth/guards/autGuard';
-import { RolesGuard } from 'src/util/permisosRoles/roles.guard';
-import { Roles } from 'src/util/permisosRoles/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/autGuard';
+import { RolesGuard } from '../util/permisosRoles/roles.guard';
+import { Roles } from '../util/permisosRoles/roles.decorator';
 import { Order } from './OrdenEntity/ordenes.entity';
 
 // DTOs para endpoints específicos con decoraciones Swagger

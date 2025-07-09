@@ -1,5 +1,5 @@
-import { OrderItem } from 'src/item-orden/itemOrdenentity/itemOrden.entity';
-import { User } from 'src/user/UserEntity/user.entity';
+import { OrderItem } from '../../item-orden/itemOrdenentity/itemOrden.entity';
+import { User } from '../../user/UserEntity/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

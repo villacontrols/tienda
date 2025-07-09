@@ -32,9 +32,9 @@ import {
 } from '@nestjs/swagger';
 import { ProductoService } from './producto.service';
 import { CreateProductDto, UpdateProductDto, FilterProductDto, UpdateStockDto } from './productoDto/productoDto';
-import { JwtAuthGuard } from 'src/auth/guards/autGuard';
-import { RolesGuard } from 'src/util/permisosRoles/roles.guard';
-import { Roles } from 'src/util/permisosRoles/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/autGuard';
+import { RolesGuard } from '../util/permisosRoles/roles.guard';
+import { Roles } from '../util/permisosRoles/roles.decorator';
 import { Product } from './entity/producto.entity';
 
 // DTOs para endpoints específicos con decoraciones Swagger

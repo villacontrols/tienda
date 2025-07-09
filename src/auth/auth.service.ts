@@ -8,9 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/user/UserEntity/user.entity';
+import { User } from '../user/UserEntity/user.entity';
 import * as dotenv from 'dotenv';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 dotenv.config();
 
 @Injectable()
