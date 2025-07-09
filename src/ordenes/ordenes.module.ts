@@ -4,8 +4,8 @@ import { OrdenesService } from './ordenes.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './OrdenEntity/ordenes.entity';
 import { OrderItem } from '../item-orden/itemOrdenentity/itemOrden.entity';
-import { ProductoService } from 'src/producto/producto.service';
-import { UserService } from 'src/user/user.service';
+import { ProductoService } from '../producto/producto.service';
+import { UserService } from '../user/user.service';
 import { ProductoModule } from '../producto/producto.module';
 import { UserModule } from '../user/user.module';
 
