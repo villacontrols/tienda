@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ItemOrdenModule } from './item-orden/item-orden.module';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
   imports: [
