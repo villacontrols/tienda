@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Order } from 'src/ordenes/OrdenEntity/ordenes.entity';
+import { Order } from '../../ordenes/OrdenEntity/ordenes.entity';
 
 export enum UserRole {
   CUSTOMER = 'cliente',
