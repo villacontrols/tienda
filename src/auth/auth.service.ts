@@ -96,7 +96,6 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no encontrado');
     }
     
-    // Remover información sensible como la contraseña
     const { password, ...userInfo } = user;
     return userInfo;
   }

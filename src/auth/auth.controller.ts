@@ -97,6 +97,6 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Token inválido o expirado' })
   async getMe(@Request() req): Promise<UserResponse> {
     // req.user contiene la información del usuario decodificada del JWT
-    return this.authService.getMe(req.user.id);
+    return this.authService.getMe(req.user.userId);
   }
 }

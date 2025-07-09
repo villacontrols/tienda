@@ -10,7 +10,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     if (err || !user) {
-      console.log("error", err, user, info)
       throw new UnauthorizedException('No está autenticado o el token no es válido');
     }
 
