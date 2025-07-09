@@ -24,14 +24,12 @@ dotenv.config();
   database: process.env.DB_NAME,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   synchronize: process.env.NODE_ENV !== 'production', // Solo en desarrollo
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
-  } : false,
-  extra: process.env.NODE_ENV === 'production' ? {
-    ssl: {
-      rejectUnauthorized: false
-    }
-  } : {}
+   ssl: true, // ← AGREGAR ESTO
+      extra: {   // ← AGREGAR ESTO
+        ssl: {
+          rejectUnauthorized: false
+        }
+      }
 }),
     UserModule, ProductoModule, OrdenesModule, AuthModule, ItemOrdenModule],
   controllers: [AppController],
