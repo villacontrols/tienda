@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
     app.enableCors({
-    origin: ['http://localhost:5173'], // agrega aquí tu frontend
+    origin: ['http://localhost:5173', "https://prueba-usuario-flax.vercel.app/"], // agrega aquí tu frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
