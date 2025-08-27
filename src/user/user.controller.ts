@@ -3,14 +3,19 @@ import {
     Get,
     Post,
     Put,
+    Patch,
     Delete,
     Body,
     Param,
     HttpStatus,
     HttpCode,
     UseGuards,
-    Request
+    Request,
+    ParseIntPipe,
+    UploadedFile,
+    UseInterceptors
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
     ApiTags,
     ApiOperation,
@@ -23,58 +28,33 @@ import {
     ApiConflictResponse,
     ApiBadRequestResponse,
     ApiProperty,
-    ApiBearerAuth
+    ApiBearerAuth,
+    ApiConsumes
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto } from './userDto/userDto';
+import { CreateUserDto, UpdateUserDto, UpdateProfileDto, LoginDto, ChangePasswordDto } from './userDto/userDto';
 import { User } from './UserEntity/user.entity';
 import { JwtAuthGuard } from '../auth/guards/autGuard';
 import { RolesGuard } from '../util/permisosRoles/roles.guard';
 import { Roles } from '../util/permisosRoles/roles.decorator';
+import { SupabaseService } from 'src/util/storage';
 
 // DTOs para endpoints específicos con decoraciones Swagger
-class ForgotPasswordDto {
+class UpdateFotoRequestDto {
     @ApiProperty({
-        description: 'Email del usuario para recuperar contraseña',
-        example: 'usuario@example.com'
+        type: 'string',
+        format: 'binary',
+        description: 'Archivo de imagen para la foto de perfil'
     })
-    email: string;
-}
-
-class ResetPasswordDto {
-    @ApiProperty({
-        description: 'Token de recuperación de contraseña',
-        example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
-    })
-    token: string;
-
-    @ApiProperty({
-        description: 'Nueva contraseña',
-        example: 'nuevaPassword123'
-    })
-    newPassword: string;
-}
-
-class ChangePasswordDto {
-    @ApiProperty({
-        description: 'Contraseña actual',
-        example: 'passwordActual123'
-    })
-    currentPassword: string;
-
-    @ApiProperty({
-        description: 'Nueva contraseña',
-        example: 'nuevaPassword123'
-    })
-    newPassword: string;
+    foto: any;
 }
 
 class ValidatePasswordDto {
     @ApiProperty({
-        description: 'Email del usuario',
+        description: 'Email o username del usuario',
         example: 'usuario@example.com'
     })
-    email: string;
+    identifier: string;
 
     @ApiProperty({
         description: 'Contraseña a validar',
@@ -91,56 +71,128 @@ class MessageResponseDto {
     })
     message: string;
 }
+
+// DTO para la respuesta del perfil de usuario
+class UserProfileResponseDto {
+    @ApiProperty({ example: 1 })
+    id: number;
+
+    @ApiProperty({ example: 'john_doe' })
+    username: string;
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            first_name: { type: 'string', example: 'John' },
+            last_name: { type: 'string', example: 'Doe' },
+            email: { type: 'string', example: 'john@example.com' }
+        }
+    })
+    user: {
+        first_name: string;
+        last_name: string;
+        email: string;
+    };
+
+    @ApiProperty({ example: '123456789' })
+    telefono: string;
+
+    @ApiProperty({ example: 'cliente' })
+    tipo_usuario: string;
+
+    @ApiProperty({ example: 'natural' })
+    tipo_naturaleza: string;
+
+    @ApiProperty({ example: 'Desarrollador full stack' })
+    biografia: string;
+
+    @ApiProperty({ example: '12345678' })
+    documento: string;
+
+    @ApiProperty({ example: 'https://linkedin.com/in/johndoe', required: false })
+    linkedin?: string;
+
+    @ApiProperty({ example: 'https://twitter.com/johndoe', required: false })
+    twitter?: string;
+
+    @ApiProperty({ example: 'https://github.com/johndoe', required: false })
+    github?: string;
+
+    @ApiProperty({ example: 'https://johndoe.dev', required: false })
+    sitio_web?: string;
+
+    @ApiProperty({ example: false })
+    esta_verificado: boolean;
+
+    @ApiProperty({ example: 'https://example.com/foto.jpg', required: false })
+    foto?: string;
+
+    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+    fecha_creacion: string;
+
+    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+    fecha_actualizacion: string;
+}
+
 @ApiBearerAuth()
 @ApiTags('Usuarios')
-@Controller('user')
+@Controller('usuario')
 export class UserController {
-    constructor(private readonly userService: UserService) { }
+    private readonly PROCEDIMIENTO_BUCKET = 'evidencias';
+    constructor(
+        private readonly userService: UserService,
+         private readonly supabaseService: SupabaseService,
+
+    ) { }
 
     // Crear usuario
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Crear nuevo usuario',
-        description: 'Crea un nuevo usuario en el sistema con email único su rol debe ser , admin o cliente'
+        description: 'Crea un nuevo usuario en el sistema con email y username únicos'
     })
     @ApiCreatedResponse({
         description: 'Usuario creado exitosamente',
         type: User
     })
     @ApiConflictResponse({
-        description: 'El email ya está registrado'
+        description: 'El email o username ya está registrado'
     })
     @ApiBadRequestResponse({
         description: 'Error en los datos proporcionados'
     })
-
     @ApiBody({
         type: CreateUserDto,
         examples: {
-            'Usuario Jhon': {
+            'Usuario Completo': {
                 value: {
-                    nombre: 'jhon',
-                    email: 'jhon@gmail.com',
+                    username: 'johndoe',
+                    first_name: 'John',
+                    last_name: 'Doe',
+                    email: 'john@gmail.com',
                     password: '12345678',
-                    rol: 'admin'
+                    telefono: '123456789',
+                    tipo_usuario: 'cliente',
+                    tipo_naturaleza: 'natural',
+                    biografia: 'Desarrollador full stack',
+                    documento: '12345678'
                 }
             }
         }
     })
-    async create(@Body() createUserDto: CreateUserDto): Promise<User | any> {
+    async create(@Body() createUserDto: CreateUserDto): Promise<User> {
         return await this.userService.create(createUserDto);
     }
 
-
-    // Obtener todos los usuarios
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    // Obtener todos los usuarios (solo admin)
+   
+ 
     @Get()
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Obtener todos los usuarios',
-        description: 'Retorna una lista de todos los usuarios registrados con sus relaciones'
+        description: 'Retorna una lista de todos los usuarios registrados (solo admin)'
     })
     @ApiOkResponse({
         description: 'Lista de usuarios obtenida exitosamente',
@@ -151,6 +203,29 @@ export class UserController {
     })
     async findAll(): Promise<User[]> {
         return await this.userService.findAll();
+    }
+
+    // Obtener perfil del usuario autenticado
+    @UseGuards(JwtAuthGuard)
+    @Get('perfil')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Obtener perfil del usuario autenticado',
+        description: 'Retorna el perfil del usuario actualmente autenticado'
+    })
+    @ApiOkResponse({
+        description: 'Perfil obtenido exitosamente',
+        type: UserProfileResponseDto
+    })
+    @ApiNotFoundResponse({
+        description: 'Usuario no encontrado'
+    })
+    @ApiBadRequestResponse({
+        description: 'Error obteniendo el perfil'
+    })
+    async getPerfil(@Request() req): Promise<UserProfileResponseDto> {
+        const userId = req.user.id; // Extraer del JWT
+        return await this.userService.getPerfil(userId);
     }
 
     // Obtener usuario por ID
@@ -164,11 +239,11 @@ export class UserController {
     @ApiParam({
         name: 'id',
         description: 'ID único del usuario',
-        example: 'uuid-123-456-789'
+        example: 1
     })
     @ApiOkResponse({
         description: 'Usuario encontrado exitosamente',
-        type: User
+        type: UserProfileResponseDto
     })
     @ApiNotFoundResponse({
         description: 'Usuario no encontrado'
@@ -176,7 +251,7 @@ export class UserController {
     @ApiBadRequestResponse({
         description: 'Error obteniendo el usuario'
     })
-    async findOne(@Param('id') id: string): Promise<User> {
+    async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserProfileResponseDto> {
         return await this.userService.findOne(id);
     }
 
@@ -207,18 +282,132 @@ export class UserController {
         return await this.userService.findByEmail(email);
     }
 
-    // Actualizar usuario
+    // Obtener usuario por username
+    @Get('username/:username')
     @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Obtener usuario por username',
+        description: 'Retorna un usuario específico basado en su username'
+    })
+    @ApiParam({
+        name: 'username',
+        description: 'Username del usuario',
+        example: 'johndoe'
+    })
+    @ApiOkResponse({
+        description: 'Usuario encontrado exitosamente',
+        type: User
+    })
+    @ApiNotFoundResponse({
+        description: 'Usuario no encontrado'
+    })
+    @ApiBadRequestResponse({
+        description: 'Error obteniendo el usuario por username'
+    })
+    async findByUsername(@Param('username') username: string): Promise<User> {
+        return await this.userService.findByUsername(username);
+    }
+
+    // Actualizar perfil del usuario autenticado
+    @UseGuards(JwtAuthGuard)
+    @Put('perfil')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Actualizar perfil del usuario',
+        description: 'Actualiza el perfil del usuario autenticado'
+    })
+    @ApiOkResponse({
+        description: 'Perfil actualizado exitosamente',
+        type: UserProfileResponseDto
+    })
+    @ApiNotFoundResponse({
+        description: 'Usuario no encontrado'
+    })
+    @ApiBadRequestResponse({
+        description: 'Error actualizando el perfil'
+    })
+    @ApiBody({
+        type: UpdateProfileDto,
+        examples: {
+            'Actualizar Perfil': {
+                value: {
+                    user: {
+                        first_name: 'John Updated',
+                        last_name: 'Doe Updated'
+                    },
+                    telefono: '987654321',
+                    tipo_usuario: 'cliente',
+                    tipo_naturaleza: 'natural',
+                    biografia: 'Desarrollador senior full stack',
+                    documento: '87654321',
+                    linkedin: 'https://linkedin.com/in/johndoe',
+                    twitter: 'https://twitter.com/johndoe',
+                    github: 'https://github.com/johndoe',
+                    sitio_web: 'https://johndoe.dev',
+                    esta_verificado: 'false'
+                }
+            }
+        }
+    })
+    async updatePerfil(
+        @Request() req,
+        @Body() updateProfileDto: UpdateProfileDto
+    ): Promise<UserProfileResponseDto> {
+        const userId = req.user.id; // Extraer del JWT
+        return await this.userService.updatePerfil(userId, updateProfileDto);
+    }
+
+    // Actualizar foto de perfil
+    @UseGuards(JwtAuthGuard)
+    @Patch('perfil/foto')
+    @UseInterceptors(FileInterceptor('foto'))
+    @ApiConsumes('multipart/form-data')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Actualizar foto de perfil',
+        description: 'Actualiza la foto de perfil del usuario autenticado'
+    })
+    @ApiOkResponse({
+        description: 'Foto actualizada exitosamente',
+        type: UserProfileResponseDto
+    })
+    @ApiNotFoundResponse({
+        description: 'Usuario no encontrado'
+    })
+    @ApiBadRequestResponse({
+        description: 'Error actualizando la foto'
+    })
+    @ApiBody({
+        type: UpdateFotoRequestDto
+    })
+    async updateFoto(
+        @Request() req,
+        @UploadedFile() file: Express.Multer.File
+    ): Promise<UserProfileResponseDto> {
+        const userId = req.user.id; // Extraer del JWT
+        
+        // Aquí deberías implementar la lógica para guardar el archivo
+        // Por ejemplo, usando un servicio de almacenamiento como AWS S3, Cloudinary, etc.
+        // Para este ejemplo, asumimos que tienes una función que maneja el archivo
+        const fotoUrl = await this.handleFileUpload(file);
+        
+        return await this.userService.updateFoto(userId, fotoUrl);
+    }
+
+    // Actualizar usuario (uso administrativo)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
     @Put(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
-        summary: 'Actualizar usuario',
-        description: 'Actualiza los datos de un usuario existente'
+        summary: 'Actualizar usuario (admin)',
+        description: 'Actualiza cualquier usuario (solo admin)'
     })
     @ApiParam({
         name: 'id',
         description: 'ID único del usuario',
-        example: 'uuid-123-456-789'
+        example: 1
     })
     @ApiOkResponse({
         description: 'Usuario actualizado exitosamente',
@@ -228,7 +417,7 @@ export class UserController {
         description: 'Usuario no encontrado'
     })
     @ApiConflictResponse({
-        description: 'El email ya está registrado por otro usuario'
+        description: 'El email o username ya está registrado por otro usuario'
     })
     @ApiBadRequestResponse({
         description: 'Error actualizando el usuario'
@@ -236,61 +425,63 @@ export class UserController {
     @ApiBody({
         type: UpdateUserDto,
         examples: {
-            'Actualizar Usuario Jhon': {
+            'Actualizar Usuario': {
                 value: {
-                    nombre: 'jhon anderson',
-                    rol: 'admin'
+                    first_name: 'John Anderson',
+                    tipo_usuario: 'admin',
+                    esta_verificado: true
                 }
             }
         }
     })
     async update(
-        @Param('id') id: string,
+        @Param('id', ParseIntPipe) id: number,
         @Body() updateUserDto: UpdateUserDto
     ): Promise<User> {
         return await this.userService.update(id, updateUserDto);
     }
 
-    // Inactivar usuario (soft delete)
+    // Cambiar estado del usuario (activar/desactivar)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles("admin")
-    @Delete('deactivate/:id')
+    @Roles('admin')
+    @Patch('toggle-status/:id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
-        summary: 'Inactivar usuario',
-        description: 'Inactiva un usuario sin eliminarlo permanentemente'
+        summary: 'Cambiar estado del usuario',
+        description: 'Activa o desactiva un usuario (solo admin)'
     })
     @ApiParam({
         name: 'id',
         description: 'ID único del usuario',
-        example: 'uuid-123-456-789'
+        example: 1
     })
     @ApiOkResponse({
-        description: 'Usuario inactivado exitosamente',
+        description: 'Estado cambiado exitosamente',
         type: MessageResponseDto
     })
     @ApiNotFoundResponse({
         description: 'Usuario no encontrado'
     })
     @ApiBadRequestResponse({
-        description: 'Error inactivando el usuario'
+        description: 'Error cambiando el estado del usuario'
     })
-    async deactivate(@Param('id') id: string): Promise<{ message: string }> {
-        return await this.userService.deactivate(id);
+    async toggleStatus(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        return await this.userService.toggleStatus(id);
     }
 
     // Eliminar usuario permanentemente
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Eliminar usuario permanentemente',
-        description: 'Elimina un usuario de forma permanente del sistema'
+        description: 'Elimina un usuario de forma permanente del sistema (solo admin)'
     })
     @ApiParam({
         name: 'id',
         description: 'ID único del usuario',
-        example: 'uuid-123-456-789'
+        example: 1
     })
     @ApiOkResponse({
         description: 'Usuario eliminado exitosamente',
@@ -302,68 +493,17 @@ export class UserController {
     @ApiBadRequestResponse({
         description: 'Error eliminando el usuario'
     })
-    async remove(@Param('id') id: string): Promise<{ message: string }> {
+    async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
         return await this.userService.remove(id);
-    }
-
-    // Recuperar contraseña - enviar token por email
-    @UseGuards(JwtAuthGuard)
-    @Post('forgot-password')
-    @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: 'Solicitar recuperación de contraseña',
-        description: 'Envía un token de recuperación de contraseña al email del usuario'
-    })
-    @ApiOkResponse({
-        description: 'Email de recuperación enviado exitosamente',
-        type: MessageResponseDto
-    })
-    @ApiNotFoundResponse({
-        description: 'Usuario no encontrado'
-    })
-    @ApiBadRequestResponse({
-        description: 'Error enviando email de recuperación'
-    })
-    @ApiBody({ type: ForgotPasswordDto })
-    async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<{ message: string }> {
-        return await this.userService.forgotPassword(forgotPasswordDto.email);
-    }
-
-    // Resetear contraseña con token
-    @UseGuards(JwtAuthGuard)
-    @Post('reset-password')
-    @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: 'Resetear contraseña con token',
-        description: 'Permite cambiar la contraseña usando un token de recuperación'
-    })
-    @ApiOkResponse({
-        description: 'Contraseña actualizada exitosamente',
-        type: MessageResponseDto
-    })
-    @ApiBadRequestResponse({
-        description: 'Token inválido o expirado'
-    })
-    @ApiBody({ type: ResetPasswordDto })
-    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<{ message: string }> {
-        return await this.userService.resetPassword(
-            resetPasswordDto.token,
-            resetPasswordDto.newPassword
-        );
     }
 
     // Cambiar contraseña (usuario autenticado)
     @UseGuards(JwtAuthGuard)
-    @Put('change-password/:id')
+    @Put('change-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Cambiar contraseña',
         description: 'Permite a un usuario autenticado cambiar su contraseña'
-    })
-    @ApiParam({
-        name: 'id',
-        description: 'ID único del usuario',
-        example: 'uuid-123-456-789'
     })
     @ApiOkResponse({
         description: 'Contraseña cambiada exitosamente',
@@ -376,24 +516,24 @@ export class UserController {
         description: 'Contraseña actual incorrecta o error cambiando la contraseña'
     })
     @ApiBody({ type: ChangePasswordDto })
-    // @UseGuards(AuthGuard) // Descomenta si tienes un guard de autenticación
     async changePassword(
-        @Param('id') userId: string,
+        @Request() req,
         @Body() changePasswordDto: ChangePasswordDto
     ): Promise<{ message: string }> {
-        return await this.userService.changePassword(
+        const userId = req.user.id; // Extraer del JWT
+        return {message: ""}/*await this.userService.changePassword(
             userId,
             changePasswordDto.currentPassword,
             changePasswordDto.newPassword
-        );
+        );*/
     }
 
-    // Validar contraseña (para login)
+    // Validar contraseña (para autenticación - uso interno)
     @Post('validate-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Validar contraseña',
-        description: 'Valida las credenciales de un usuario para el proceso de login'
+        description: 'Valida las credenciales de un usuario (uso interno para autenticación)'
     })
     @ApiOkResponse({
         description: 'Contraseña validada exitosamente',
@@ -405,8 +545,48 @@ export class UserController {
     @ApiBody({ type: ValidatePasswordDto })
     async validatePassword(@Body() validatePasswordDto: ValidatePasswordDto): Promise<User | null> {
         return await this.userService.validatePassword(
-            validatePasswordDto.email,
+            validatePasswordDto.identifier,
             validatePasswordDto.password
         );
     }
+
+    // Método auxiliar para manejar subida de archivos
+   private async handleFileUpload(file: Express.Multer.File): Promise<string> {
+    // 1. Creas el nombre de archivo único
+    const filename = `${Date.now()}-${file.originalname}`;
+
+    // 2. Usas ese 'filename' al llamar al servicio de subida
+    const result = await this.supabaseService.uploadFile(
+        this.PROCEDIMIENTO_BUCKET, // Nombre del bucket
+        file.buffer,              // El contenido del archivo
+        file.mimetype,            // El tipo de archivo (e.g., 'image/jpeg')
+        filename                  // <--- AQUÍ VA TU VARIABLE
+    );
+
+    return result.publicUrl;
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

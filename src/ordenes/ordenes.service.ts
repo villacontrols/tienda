@@ -23,7 +23,7 @@ export class OrdenesService {
     async create(createOrderDto: CreateOrderDto): Promise<Order | any> {
         try {
             // Verificar que el usuario existe
-            const user = await this.userService.findOne(createOrderDto.userId);
+            const user = await this.userService.findOne(createOrderDto.userId as any);
             if (!user) {
                 throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
             }
@@ -121,7 +121,7 @@ export class OrdenesService {
     async findByUser(userId: string): Promise<Order[]> {
         try {
             // Verificar que el usuario existe
-            await this.userService.findOne(userId);
+            await this.userService.findOne(userId as any);
 
             const orders = await this.orderRepository.find({
                 where: { userId },
@@ -164,7 +164,7 @@ export class OrdenesService {
 
             // Si se está actualizando el usuario, verificar que existe
             if (updateOrderDto.userId && updateOrderDto.userId !== order.userId) {
-                const user = await this.userService.findOne(updateOrderDto.userId);
+                const user = await this.userService.findOne(updateOrderDto.userId as any);
                 if (!user.status) {
                     throw new HttpException('El usuario no está activo', HttpStatus.FORBIDDEN);
                 }

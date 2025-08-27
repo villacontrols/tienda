@@ -23,13 +23,7 @@ dotenv.config();
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: process.env.NODE_ENV !== 'production', // Solo en desarrollo
-   ssl: true, // ← AGREGAR ESTO
-      extra: {   // ← AGREGAR ESTO
-        ssl: {
-          rejectUnauthorized: false
-        }
-      }
+  synchronize: process.env.NODE_ENV !== 'production',
 }),
     UserModule, ProductoModule, OrdenesModule, AuthModule, ItemOrdenModule],
   controllers: [AppController],

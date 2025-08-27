@@ -23,10 +23,11 @@ export class AuthService {
   ) {}
 
   // Validar usuario por email y contraseña
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(username: string, password: string): Promise<User | null> {
+    
     try {
-      const user = await this.userRepository.findOne({ where: { email } });
-
+      const user = await this.userRepository.findOne({ where: { username: username } });
+   console.log("encontrado", user, username)
       if (!user) return null;
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -43,7 +44,7 @@ export class AuthService {
   // Login
   async login(user: User): Promise<{ access_token: string; refresh_token: string }> {
     try {
-      const payload = { sub: user.id, email: user.email, rol: user.rol };
+      const payload = { sub: user.id, email: user.email, };
 
       const access_token = this.jwtService.sign(payload, {
         secret: process.env.TOKEN_SECRET,
@@ -76,7 +77,7 @@ export class AuthService {
       if (!user) throw new UnauthorizedException('Usuario no encontrado');
 
       const newAccessToken = this.jwtService.sign(
-        { sub: user.id, email: user.email, rol: user.rol },
+        { sub: user.id, email: user.email, },
         {
           secret: process.env.TOKEN_SECRET,
           expiresIn: '15m',
@@ -91,7 +92,7 @@ export class AuthService {
   }
 
    async getMe(userId: string): Promise<any> {
-    const user = await this.usersService.findOne(userId);
+    const user = await this.usersService.findOne(userId as any);
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
